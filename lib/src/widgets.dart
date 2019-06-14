@@ -7,12 +7,12 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:rxdart/subjects.dart' show BehaviorSubject;
 
-import 'engine.dart';
+import 'engine.dart' as engine;
 
 /// A [StatelessWidget] that provides [Store] access to its descendants via a
 /// static [of] method.
 class StoreProvider<S> extends StatelessWidget {
-  final Store<S> store;
+  final engine.Store<S> store;
   final Widget child;
 
   StoreProvider({
@@ -21,7 +21,7 @@ class StoreProvider<S> extends StatelessWidget {
     Key key,
   }) : super(key: key);
 
-  static Store<S> of<S>(BuildContext context) {
+  static engine.Store<S> of<S>(BuildContext context) {
     final Type type = _type<_InheritedStoreProvider<S>>();
 
     Widget widget = context.inheritFromWidgetOfExactType(type);
@@ -44,7 +44,7 @@ class StoreProvider<S> extends StatelessWidget {
 
 /// The [InheritedWidget] used by [StoreProvider].
 class _InheritedStoreProvider<S> extends InheritedWidget {
-  final Store<S> store;
+  final engine.Store<S> store;
 
   _InheritedStoreProvider({Key key, Widget child, this.store})
       : super(key: key, child: child);
@@ -57,8 +57,8 @@ class _InheritedStoreProvider<S> extends InheritedWidget {
 /// Accepts a [BuildContext] and [ViewModel] and builds a Widget in response. A
 /// [DispatchFunction] is provided so widgets in the returned subtree can
 /// dispatch new actions to the [Store] in response to UI events.
-typedef Widget ViewModelWidgetBuilder<S, V>(
-    BuildContext context, DispatchFunction dispatcher, V viewModel);
+typedef Widget ViewModelWidgetBuilder<S, V>(BuildContext context,
+    engine.DispatchFunction dispatcher, V viewModel);
 
 /// Creates a new view model instance from the given state object. This method
 /// should be used to narrow or filter the data present in [state] to the
@@ -88,7 +88,7 @@ class ViewModelSubscriber<S, V> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Store<S> store = StoreProvider.of<S>(context);
+    engine.Store<S> store = StoreProvider.of<S>(context);
     return _ViewModelStreamBuilder<S, V>(
         dispatcher: store.dispatcher,
         stream: store.states,
@@ -99,7 +99,7 @@ class ViewModelSubscriber<S, V> extends StatelessWidget {
 
 /// Does the actual work for [ViewModelSubscriber].
 class _ViewModelStreamBuilder<S, V> extends StatefulWidget {
-  final DispatchFunction dispatcher;
+  final engine.DispatchFunction dispatcher;
   final BehaviorSubject<S> stream;
   final ViewModelConverter<S, V> converter;
   final ViewModelWidgetBuilder<S, V> builder;
@@ -165,8 +165,8 @@ class _ViewModelStreamBuilderState<S, V>
 
 /// Widget builder function that includes a [dispatcher] capable of dispatching
 /// an [Action] to an inherited [Store].
-typedef Widget DispatchWidgetBuilder(
-    BuildContext context, DispatchFunction dispatcher);
+typedef Widget DispatchWidgetBuilder(BuildContext context,
+    engine.DispatchFunction dispatcher);
 
 /// Retrieves a [DispatcherFunction] from an ancestor [StoreProvider], and
 /// builds builds widgets that can use it.
@@ -203,7 +203,7 @@ class FirstBuildDispatcher<S> extends StatefulWidget {
     Key key,
   }) : super(key: key);
 
-  final Action action;
+  final engine.Action action;
   final Widget child;
 
   @override
