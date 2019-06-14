@@ -6,7 +6,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:rebloc/rebloc.dart';
+import 'package:rebloc/rebloc.dart' as rebloc;
 
 String _formatTime(DateTime time) {
   String hours = time.hour.toString().padLeft(2, '0');
@@ -17,7 +17,7 @@ String _formatTime(DateTime time) {
 }
 
 void main() {
-  final store = Store<AppState>(
+  final store = rebloc.Store<AppState>(
     initialState: AppState.initialState(),
     blocs: [
       LoggerBloc(),
@@ -28,7 +28,7 @@ void main() {
   runApp(
     new MaterialApp(
       title: 'Rebloc List Example',
-      home: StoreProvider<AppState>(
+      home: rebloc.StoreProvider<AppState>(
         store: store,
         child: new MyHomePage(),
       ),
@@ -55,21 +55,21 @@ class AppState {
   String toString() => namesAndCounts.toString();
 }
 
-class StartStreamOfIncrementsAction extends Action {}
+class StartStreamOfIncrementsAction extends rebloc.Action {}
 
-class IncrementAction extends Action {
+class IncrementAction extends rebloc.Action {
   final String name;
 
   IncrementAction(this.name);
 }
 
-class LogNameAction extends Action {
+class LogNameAction extends rebloc.Action {
   LogNameAction(this.name);
 
   final String name;
 }
 
-class NamesAndCountsBloc implements Bloc<AppState> {
+class NamesAndCountsBloc implements rebloc.Bloc<AppState> {
   static const _names = ['Steve', 'Yu Yan', 'Sreela', 'Angelica', 'Guillaume'];
   static Random _rng = Random();
 
@@ -79,8 +79,8 @@ class NamesAndCountsBloc implements Bloc<AppState> {
   Timer _timer;
 
   @override
-  Stream<WareContext<AppState>> applyMiddleware(
-      Stream<WareContext<AppState>> input) {
+  Stream<rebloc.WareContext<AppState>> applyMiddleware(
+      Stream<rebloc.WareContext<AppState>> input) {
     input.listen((context) {
       if (context.action is StartStreamOfIncrementsAction) {
         _timer = Timer.periodic(
@@ -94,13 +94,13 @@ class NamesAndCountsBloc implements Bloc<AppState> {
   }
 
   @override
-  Stream<Accumulator<AppState>> applyReducer(
-      Stream<Accumulator<AppState>> input) {
+  Stream<rebloc.Accumulator<AppState>> applyReducer(
+      Stream<rebloc.Accumulator<AppState>> input) {
     return input.map((accumulator) {
       if (accumulator.action is IncrementAction) {
         String name = (accumulator.action as IncrementAction).name;
         int newTotal = (accumulator.state.namesAndCounts[name] ?? 0) + 1;
-        return Accumulator(
+        return rebloc.Accumulator(
           accumulator.action,
           accumulator.state.copyWith({name: newTotal}),
         );
@@ -111,17 +111,17 @@ class NamesAndCountsBloc implements Bloc<AppState> {
   }
 
   @override
-  Stream<WareContext<AppState>> applyAfterware(
-      Stream<WareContext<AppState>> input) {
+  Stream<rebloc.WareContext<AppState>> applyAfterware(
+      Stream<rebloc.WareContext<AppState>> input) {
     return input;
   }
 }
 
-class LoggerBloc extends SimpleBloc<AppState> {
+class LoggerBloc extends rebloc.SimpleBloc<AppState> {
   AppState lastState;
 
   @override
-  Future<Action> middleware(dispatcher, state, action) async {
+  Future<rebloc.Action> middleware(dispatcher, state, action) async {
     if (action is LogNameAction) {
       print('New widget has appeared: ${action.name}.');
     }
@@ -130,8 +130,8 @@ class LoggerBloc extends SimpleBloc<AppState> {
   }
 
   @override
-  FutureOr<Action> afterware(
-      DispatchFunction dispatcher, AppState state, Action action) {
+  FutureOr<rebloc.Action> afterware(rebloc.DispatchFunction dispatcher,
+      AppState state, rebloc.Action action) {
     if (state != lastState) {
       print('State just became: $state');
       lastState = state;
@@ -148,7 +148,7 @@ class NameAndCount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ViewModelSubscriber<AppState, int>(
+    return rebloc.ViewModelSubscriber<AppState, int>(
       converter: (state) => state.namesAndCounts[name],
       builder: (context, dispatcher, viewModel) {
         final dateStr = _formatTime(DateTime.now());
@@ -201,14 +201,14 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Rebloc list example')),
-      body: ViewModelSubscriber<AppState, NameListViewModel>(
+      body: rebloc.ViewModelSubscriber<AppState, NameListViewModel>(
         converter: (state) =>
             NameListViewModel(state.namesAndCounts.keys.toList()),
         builder: (context, dispatcher, viewModel) {
           final dateStr = _formatTime(DateTime.now());
 
           final listRows = viewModel.names.map<Widget>((name) {
-            return FirstBuildDispatcher<AppState>(
+            return rebloc.FirstBuildDispatcher<AppState>(
               action: LogNameAction(name),
               child: NameAndCount(name, key: ValueKey(name)),
             );

@@ -5,7 +5,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:rebloc/rebloc.dart';
+import 'package:rebloc/rebloc.dart' as rebloc;
 
 String _formatTime(DateTime time) {
   String hours = time.hour.toString().padLeft(2, '0');
@@ -18,8 +18,8 @@ String _formatTime(DateTime time) {
 void main() => runApp(
       new MaterialApp(
         title: 'Rebloc Example',
-        home: StoreProvider<AppState>(
-          store: Store<AppState>(
+        home: rebloc.StoreProvider<AppState>(
+          store: rebloc.Store<AppState>(
             initialState: AppState.initialState(),
             blocs: [
               LoggerBloc(),
@@ -60,21 +60,21 @@ class AppState {
   }
 }
 
-class IntAction extends Action {}
+class IntAction extends rebloc.Action {}
 
-class DoubleAction extends Action {}
+class DoubleAction extends rebloc.Action {}
 
-class StringAction extends Action {
+class StringAction extends rebloc.Action {
   final String newChar;
 
   StringAction(this.newChar);
 }
 
-class DescriptionAction extends Action {}
+class DescriptionAction extends rebloc.Action {}
 
-class ResetAction extends Action {}
+class ResetAction extends rebloc.Action {}
 
-class IntBloc extends SimpleBloc<AppState> {
+class IntBloc extends rebloc.SimpleBloc<AppState> {
   @override
   AppState reducer(state, action) {
     if (action is IntAction) {
@@ -87,7 +87,7 @@ class IntBloc extends SimpleBloc<AppState> {
   }
 }
 
-class DoubleBloc extends SimpleBloc<AppState> {
+class DoubleBloc extends rebloc.SimpleBloc<AppState> {
   @override
   AppState reducer(state, action) {
     if (action is DoubleAction) {
@@ -100,7 +100,7 @@ class DoubleBloc extends SimpleBloc<AppState> {
   }
 }
 
-class StringBloc extends SimpleBloc<AppState> {
+class StringBloc extends rebloc.SimpleBloc<AppState> {
   @override
   AppState reducer(state, action) {
     if (action is StringAction) {
@@ -113,9 +113,9 @@ class StringBloc extends SimpleBloc<AppState> {
   }
 }
 
-class DescriptionBloc extends SimpleBloc<AppState> {
+class DescriptionBloc extends rebloc.SimpleBloc<AppState> {
   @override
-  FutureOr<Action> middleware(dispatcher, state, action) {
+  FutureOr<rebloc.Action> middleware(dispatcher, state, action) {
     if (action is DescriptionAction) {
       dispatcher(IntAction());
       dispatcher(DoubleAction());
@@ -127,11 +127,11 @@ class DescriptionBloc extends SimpleBloc<AppState> {
 }
 
 /// Logs each incoming action.
-class LoggerBloc extends SimpleBloc<AppState> {
+class LoggerBloc extends rebloc.SimpleBloc<AppState> {
   AppState lastState;
 
   @override
-  Future<Action> middleware(dispatcher, state, action) async {
+  Future<rebloc.Action> middleware(dispatcher, state, action) async {
     print('${action.runtimeType} dispatched.');
 
     // This is just to demonstrate that middleware can be async. In most cases,
@@ -140,8 +140,8 @@ class LoggerBloc extends SimpleBloc<AppState> {
   }
 
   @override
-  FutureOr<Action> afterware(
-      DispatchFunction dispatcher, AppState state, Action action) {
+  FutureOr<rebloc.Action> afterware(rebloc.DispatchFunction dispatcher,
+      AppState state, rebloc.Action action) {
     if (state != lastState) {
       print('State just became: $state');
       lastState = state;
@@ -153,19 +153,19 @@ class LoggerBloc extends SimpleBloc<AppState> {
 
 /// Limits each of the three values in [AppState] to certain maximums. This
 /// [Bloc] must appear before the others in the list given to the [Store].
-class LimitBloc extends SimpleBloc<AppState> {
+class LimitBloc extends rebloc.SimpleBloc<AppState> {
   static const maxInt = 10;
   static const maxDouble = 10;
   static const maxLength = 10;
 
   @override
-  FutureOr<Action> middleware(
-      DispatchFunction dispatcher, AppState state, Action action) {
+  FutureOr<rebloc.Action> middleware(rebloc.DispatchFunction dispatcher,
+      AppState state, rebloc.Action action) {
     if ((action is IntAction && state.anInt == maxInt) ||
         (action is DoubleAction && state.aDouble == maxDouble) ||
         (action is StringAction && state.aString.length == maxLength)) {
       // Cancel (or "swallow") the action if a limit would be exceeded.
-      return Action.cancelled();
+      return rebloc.Action.cancelled();
     }
 
     return action;
@@ -175,7 +175,7 @@ class LimitBloc extends SimpleBloc<AppState> {
 class IntDisplayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ViewModelSubscriber<AppState, int>(
+    return rebloc.ViewModelSubscriber<AppState, int>(
       converter: (state) => state.anInt,
       builder: (context, dispatcher, viewModel) {
         final dateStr = _formatTime(DateTime.now());
@@ -203,7 +203,7 @@ class IntDisplayWidget extends StatelessWidget {
 class DoubleDisplayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ViewModelSubscriber<AppState, double>(
+    return rebloc.ViewModelSubscriber<AppState, double>(
       converter: (state) => state.aDouble,
       builder: (context, dispatcher, viewModel) {
         final dateStr = _formatTime(DateTime.now());
@@ -231,7 +231,7 @@ class DoubleDisplayWidget extends StatelessWidget {
 class StringDisplayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ViewModelSubscriber<AppState, String>(
+    return rebloc.ViewModelSubscriber<AppState, String>(
       converter: (state) => state.aString,
       builder: (context, dispatcher, viewModel) {
         final dateStr = _formatTime(DateTime.now());
@@ -273,7 +273,7 @@ class DescriptionViewModel {
 class DescriptionDisplayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ViewModelSubscriber<AppState, DescriptionViewModel>(
+    return rebloc.ViewModelSubscriber<AppState, DescriptionViewModel>(
       converter: (state) => DescriptionViewModel(state),
       builder: (context, dispatcher, viewModel) {
         final dateStr = _formatTime(DateTime.now());
@@ -321,7 +321,7 @@ class MyHomePage extends StatelessWidget {
             SizedBox(height: 24.0),
             Text('Combined view model:', style: textTheme.subhead),
             DescriptionDisplayWidget(),
-            DispatchSubscriber<AppState>(
+            rebloc.DispatchSubscriber<AppState>(
               builder: (context, dispatcher) => Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: RaisedButton(
