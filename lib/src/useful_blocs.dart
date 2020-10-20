@@ -41,8 +41,7 @@ class DebouncerBloc<T> implements Bloc<T> {
   Stream<WareContext<T>> applyMiddleware(Stream<WareContext<T>> input) {
     return MergeStream<WareContext<T>>([
       input.where((c) => !actionTypes.contains(c.action.runtimeType)),
-      Observable(input.where((c) => actionTypes.contains(c.action.runtimeType)))
-          .debounce(duration),
+      (input.where((c) => actionTypes.contains(c.action.runtimeType))).debounceTime(duration)
     ]);
   }
 
